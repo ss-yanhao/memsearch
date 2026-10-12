@@ -217,3 +217,34 @@ test('dock renderer resolves sessionId from session prop and requests candidates
     'candidates are fetched using session-2 from props.session',
   )
 })
+
+test('internationalization translates UI in Chinese locale', () => {
+  let moduleDef
+  const React = {
+    createElement(type, props, ...children) {
+      return { type, props: { ...(props || {}), children: children.length <= 1 ? children[0] : children } }
+    },
+    useState(initial) { return [initial, () => {}] },
+    useCallback(fn) { return fn },
+    useEffect() {},
+    useRef(initial) { return { current: initial } },
+  }
+  const context = vm.createContext({
+    window: { __ModuleLoader__: { load(def) { moduleDef = def } } },
+    navigator: { language: 'zh-CN' },
+  })
+  const source = fs.readFileSync(new URL('../client.js', import.meta.url), 'utf8')
+  vm.runInContext(source, context)
+  const client = moduleDef.factory(() => React)
+  let dockRenderer
+  client.apply({ get: () => ({ inject: (_n, r) => r(), register: (_m, r) => { dockRenderer = r } }) })
+
+  const element = dockRenderer({ sessionId: 'session-zh' })
+  assert.ok(element)
+  assert.equal(typeof element.props.t, 'function')
+  assert.equal(element.props.t('btnOpen'), '打开')
+  assert.equal(element.props.t('btnCollapse'), '折叠')
+  assert.equal(element.props.t('btnRefresh'), '刷新')
+  assert.equal(element.props.t('btnHide'), '隐藏')
+  assert.equal(element.props.t('panelTitle'), '技能候选清单')
+})
