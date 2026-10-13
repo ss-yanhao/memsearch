@@ -102,10 +102,21 @@ window.__ModuleLoader__.load({
           if (l && typeof l === 'string') return l.toLowerCase().startsWith('zh') ? 'zh' : 'en'
         }
       } catch (e) {}
-      if (typeof navigator !== 'undefined' && navigator.language) {
-        return navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en'
+      if (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) {
+        var docLang = document.documentElement.lang.toLowerCase()
+        if (docLang.startsWith('zh')) return 'zh'
+        if (docLang.startsWith('en')) return 'en'
       }
-      return 'en'
+      if (typeof navigator !== 'undefined') {
+        var nLang = (navigator.language || '').toLowerCase()
+        if (nLang.startsWith('zh')) return 'zh'
+        if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
+          var first = navigator.languages[0].toLowerCase()
+          if (first.startsWith('zh')) return 'zh'
+          if (first.startsWith('en')) return 'en'
+        }
+      }
+      return 'zh'
     }
 
     function createTranslator(lang) {
